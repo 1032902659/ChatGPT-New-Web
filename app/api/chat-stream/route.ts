@@ -1,14 +1,14 @@
 import { createParser } from "eventsource-parser";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requestOpenai } from "../common";
 
-async function createStream(req: NextRequest) {
+async function createStream(req: NextRequest): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
   const res = await requestOpenai(req);
 
-  const stream = new ReadableStream({
+  const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       function onParse(event: any) {
         if (event.type === "event") {
@@ -38,17 +38,21 @@ async function createStream(req: NextRequest) {
   return stream;
 }
 
-export async function POST(req: NextRequest) {
+export async function handle(req: NextRequest, res: NextResponse) {
   try {
     const stream = await createStream(req);
     return new Response(stream);
   } catch (error) {
     console.error("[Chat Stream]", error);
+    res.status(500).send("Internal Server Error");
   }
 }
 
 export const config = {
-  runtime: "segment",
+  segment: true,
+  export: async function () {
+    return {
+      // Add any required export values here.
+    };
+  },
 };
-
-
