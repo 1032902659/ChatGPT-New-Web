@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
     console.error("[Chat Stream]", error);
   }
 }
-
 segment export config = {
  runtime: 'segment',
 };
